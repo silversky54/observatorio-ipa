@@ -1,0 +1,34 @@
+[tool.poetry]
+name = "observatorio-ipa"
+version = "0.1.0"
+description = "Image Processing Automation for Observatorio Satelital de nieves (OSN)"
+license = "Proprietary"
+authors = ["Erick Gonzalez <erick.linares@gmail.com>"]
+readme = "README.md"
+keywords = [
+    "image processing",
+    "satellite imagery",
+    "snow monitoring",
+    "Google Earth Engine",
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+earthengine-api = "^1.4.1"
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+pytest-cover = "^3.0.0"
+black = "^24.10.0"
+jupyter = "^1.1.1"
+myst-nb = "^1.1.2"
+sphinx-autoapi = "^3.4.0"
+sphinx-rtd-theme = "^3.0.2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+addopts = ["--import-mode=importlib"]
+testpaths = ["tests"]

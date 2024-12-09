@@ -1,0 +1,22 @@
+{
+    "cSpell.words": [
+        "Bardossy",
+        "featurecollection",
+        "Gafurov",
+        "millisec",
+        "modis",
+        "ndsi",
+        "observatorionieves",
+        "reclass",
+        "Reclass",
+        "reproject"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "python.analysis.extraPaths": [
+        "./src"
+    ],
+}
