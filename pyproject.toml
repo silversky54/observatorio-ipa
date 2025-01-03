@@ -15,6 +15,8 @@ keywords = [
 [tool.poetry.dependencies]
 python = "^3.12"
 earthengine-api = "^1.4.1"
+gee-toolbox = { path = "../asset_delete/dist/gee_toolbox-0.2.0-py3-none-any.whl" }
+email-validator = "^2.2.0"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 pytest-cover = "^3.0.0"
@@ -23,6 +25,10 @@ jupyter = "^1.1.1"
 myst-nb = "^1.1.2"
 sphinx-autoapi = "^3.4.0"
 sphinx-rtd-theme = "^3.0.2"
+pytest-mock = "^3.14.0"
+pytest-gee = "^0.5.0"
+python-dotenv = "^1.0.1"
+logging-tree = "^1.10"
 
 [build-system]
 requires = ["poetry-core"]
@@ -32,3 +38,7 @@ build-backend = "poetry.core.masonry.api"
 pythonpath = ["."]
 addopts = ["--import-mode=importlib"]
 testpaths = ["tests"]
+filterwarnings = [
+    "ignore::DeprecationWarning:pkg_resources.*",
+    "ignore::DeprecationWarning:ee_extra.*",
+]

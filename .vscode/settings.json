@@ -1,15 +1,21 @@
 {
     "cSpell.words": [
         "Bardossy",
+        "dateutil",
         "featurecollection",
         "Gafurov",
+        "MCDS",
+        "millis",
         "millisec",
         "modis",
         "ndsi",
         "observatorionieves",
         "reclass",
         "Reclass",
-        "reproject"
+        "reproj",
+        "reproject",
+        "SRTM",
+        "UNSUBMITTED"
     ],
     "python.testing.pytestArgs": [
         "tests"

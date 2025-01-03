@@ -35,9 +35,7 @@ is calculated in the function binary.img_snow_landcover_reclass()
 # TODO: Move DEFAULT_PROJECTION and DEFAULT_SCALE to a configuration file
 
 import ee
-
-DEFAULT_PROJECTION = "SR-ORG:6974"
-DEFAULT_SCALE = 463.31271652791656
+from observatorio_ipa.defaults import DEFAULT_CHI_PROJECTION, DEFAULT_SCALE
 
 
 def calculate_TAC(image: ee.image.Image) -> ee.image.Image:
@@ -61,10 +59,10 @@ def calculate_TAC(image: ee.image.Image) -> ee.image.Image:
 
     # Calculate the TAC by taking the maximum value between 'LandCover_T' and 'LandCover_A'
     ee_TAC_img = (
-        image.select("LandCover_T", "LandCover_A")
+        image.select(["LandCover_T", "LandCover_A"])
         .reduce(ee.reducer.Reducer.max())
         .rename("TAC")
-        .reproject(DEFAULT_PROJECTION, None, DEFAULT_SCALE)
+        .reproject(DEFAULT_CHI_PROJECTION, None, DEFAULT_SCALE)
     )
 
     return image.addBands(ee_TAC_img)
@@ -134,9 +132,7 @@ def add_missing_band(image: ee.image.Image, band: str) -> ee.image.Image:
     # ? Was the intention to add a new band with Null values or 0 values?
     # TODO: If this function truly adds value, move to auxiliary functions in separate module
 
-    ee_new_band_img_tmp = ee.image.Image().rename(
-        band
-    )  #! rename what? doesn't this error out?
+    ee_new_band_img_tmp = ee.image.Image().rename(band)
     ee_new_band_img = ee.image.Image([ee_new_band_img_tmp])
     return image.addBands(ee_new_band_img)
 
@@ -165,8 +161,6 @@ def merge(
 
     """
     # ? Confirm how ee.join.Join works. Returns a FeatureCollection
-    # ? What does MOD stand for
-    # ? What does MYD stand for
     # ? What does MCD stand for
     # ? This function merges by date, should it check that there are no duplicate dates?
     # ? step (5) says rename, but it's really only adding the bands from the oposite collection
@@ -185,24 +179,31 @@ def merge(
     ee_filterTimeEq = ee.filter.Filter.equals(
         leftField="system:time_start", rightField="system:time_start"
     )
-    ee_MCD_inner_ic = ee_innerJoin.apply(ee_MOD_ic, ee_MYD_ic, ee_filterTimeEq).map(
-        lambda feature: ee.image.Image.cat(
-            feature.get("primary"), feature.get("secondary")
+
+    ee_MCD_inner_fc = ee_innerJoin.apply(
+        ee_MOD_ic, ee_MYD_ic, ee_filterTimeEq
+    )  # Returns feature collection
+
+    ee_MCD_inner_ic = ee.imagecollection.ImageCollection(
+        ee_MCD_inner_fc.map(
+            lambda feature: ee.image.Image.cat(
+                feature.get("primary"), feature.get("secondary")
+            )
         )
     )
 
-    # (2) Identify images not present in the other collection
-    # (3) Add Aqua bands to the collection in order to duplicate the bands
-    # (4) Rename the duplicate bands to match the collection with the inner join number of Aqua bands (8 bands)
+    # # (2) Identify images not present in the other collection
+    # # (3) Add Aqua bands to the collection in order to duplicate the bands
+    # # (4) Rename the duplicate bands to match the collection with the inner join number of Aqua bands (8 bands)
     invertedJoin = ee.join.Join.inverted()
 
-    # Collection of Terra (MOD) images that are not in Aqua (MYD) collection
+    # Terra (MOD) images that are not in Aqua (MYD) collection
     ee_MOD_excluding_MYD_ic = ee.imagecollection.ImageCollection(
         invertedJoin.apply(ee_MOD_ic, ee_MYD_ic, ee_filterTimeEq)
     ).map(lambda image: add_missing_band(image, band="LandCover_A"))
 
-    # Collection of Aqua (MYD) images that are not in Terra (MOD) collection
-    ee_MYD_excluding_MOD_fc = ee.imagecollection.ImageCollection(
+    # Aqua (MYD) images that are not in Terra (MOD) collection
+    ee_MYD_excluding_MOD_ic = ee.imagecollection.ImageCollection(
         invertedJoin.apply(ee_MYD_ic, ee_MOD_ic, ee_filterTimeEq)
     ).map(lambda image: add_missing_band(image, band="LandCover_T"))
 
@@ -210,14 +211,14 @@ def merge(
     # The result should be an ImageCollection with 8 bands apparently.
     ee_join_all_ic = (
         ee_MCD_inner_ic.merge(ee_MOD_excluding_MYD_ic)
-        .merge(ee_MYD_excluding_MOD_fc)
+        .merge(ee_MYD_excluding_MOD_ic)
         .sort("system:time_start")
     )
 
-    # -------- ADD TAC & QA BANDS --------#
+    # # -------- ADD TAC & QA BANDS --------#
 
-    ee_collectionTAC_step_01_ic = (
+    ee_TAC_step_01_ic = (
         ee_join_all_ic.map(calculate_TAC).map(calculate_TA_QA).select(["TAC", "QA_CR"])
     )
 
-    return ee_collectionTAC_step_01_ic
+    return ee_TAC_step_01_ic

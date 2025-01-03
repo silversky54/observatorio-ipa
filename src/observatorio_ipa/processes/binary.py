@@ -1,11 +1,12 @@
 """
-This module includes functions to create a new band for snow landcover classification using the bands 
-'NDSI_Snow_Cover' and 'Snow_Albedo_Daily_Tile_Class' from MODIS. The classification is based on the.
+functions to create a new band for snow landcover classification using the  
+'NDSI_Snow_Cover' and 'Snow_Albedo_Daily_Tile_Class' bands from MODIS.
 Pixels are re-classified as 0 (cloud), 50 (land), and 100 (snow). 
 
-It implements the preprocessing steps of Gafurov & Bardossy
-uses Terra (MOD10A1) and Aqua (MYD10A1) images from collection 6 of MODIS
-The scale used for Terra (MOD10A1) and Aqua (MYD10A1) is 463.31271652791656, both projected on 'SR-ORG:6974'
+It implements the pre-processing steps of Gafurov & Bardossy.
+Uses Terra (MOD10A1) and Aqua (MYD10A1) images from collection 6 of MODIS
+The scale used for Terra (MOD10A1) and Aqua (MYD10A1) is 463.31271652791656, both
+ projected on 'SR-ORG:6974'
 
 This is based on the js code from - users/observatorionieves/modules/CR/Binary.js
 
@@ -40,7 +41,7 @@ from ee.featurecollection import FeatureCollection
 
 def img_snow_landcover_reclass(
     ee_img: Image, threshold_ndsi: int | ee.ee_number.Number = 40
-):
+) -> ee.image.Image:
     """
     Adds a band 'LandCover_class' to the image for Snow landcover classification.
 
@@ -54,6 +55,11 @@ def img_snow_landcover_reclass(
     returns:
         ee.image.Image: Original image with one new band 'LandCover_class'.
     """
+    if not isinstance(ee_img, ee.image.Image):
+        raise TypeError("Input must be an ee.Image")
+
+    if not isinstance(threshold_ndsi, int | ee.ee_number.Number):
+        raise TypeError("Threshold_NDSI must be an integer or ee.Number")
 
     # if threshold_ndsi is not an ee.Number, convert it to one.
     if not isinstance(threshold_ndsi, ee.ee_number.Number):
@@ -64,10 +70,10 @@ def img_snow_landcover_reclass(
     # Recode 'Snow_Albedo_Daily_Tile_Class' band to 'nodata'.
     # nodata = 0 (cloud/no decision/ missing etc), 50 (land/ocean/inland water), None (any other value)
     ee_nodata_img = ee_img.remap(
-        [101, 111, 125, 137, 139, 150, 151, 250, 251, 252, 253, 254],
-        [0, 0, 50, 50, 50, 0, 0, 0, 50, 0, 50, 0],
-        None,
-        "Snow_Albedo_Daily_Tile_Class",
+        from_=[101, 111, 125, 137, 139, 150, 151, 250, 251, 252, 253, 254],
+        to=[0, 0, 50, 50, 50, 0, 0, 0, 50, 0, 50, 0],
+        defaultValue=None,
+        bandName="Snow_Albedo_Daily_Tile_Class",
     ).rename("nodata")
 
     # Recode 'NDSI_Snow_Cover' band to 'SnowReclass'.
@@ -79,7 +85,7 @@ def img_snow_landcover_reclass(
         .rename("snow")
     )
     ee_snow_reclassify_img = ee_snow_img.remap(
-        [0, 100], [50, 100], None, "snow"
+        from_=[0, 100], to=[50, 100], defaultValue=None, bandName="snow"
     ).rename("SnowReclass")
 
     # Join bands and reduce to one band 'LandCover_class'
@@ -89,7 +95,9 @@ def img_snow_landcover_reclass(
     )
 
     # Join "LandCover_class' band to original image and set threshold as a property
-    return ee_img.addBands(ee_landcover_img).set("Threshold_NDSI", ee_threshold_ndsi)
+    return ee.image.Image(
+        ee_img.addBands(ee_landcover_img).set("Threshold_NDSI", ee_threshold_ndsi)
+    )
 
 
 def ic_snow_landcover_reclass(
@@ -106,8 +114,8 @@ def ic_snow_landcover_reclass(
     'LandCover_class' has three values: 0 (cloud), 50 (land), and 100 (snow).
 
     Args:
-        collection (ee.imagecollection.ImageCollection): MODIS image collection.
-        aoi (ee.featurecollection.FeatureCollection): Area of interest.
+        ee_collection (ee.imagecollection.ImageCollection): MODIS image collection.
+        ee_aoi (ee.featurecollection.FeatureCollection): Feature collection with Area of interest.
         threshold_ndsi (int | ee.ee_number.Number): NDSI threshold, must be between 0 and 100.
 
     Returns:

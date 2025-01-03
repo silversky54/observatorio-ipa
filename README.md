@@ -1,15 +1,23 @@
 # Image Processing Automation for Observatorio Satelital de Nieve - OSN
 
-https://observatorionieves.cl/pages/cuencas.html?cuenca=038
+Automated Image processing for [Observatorio Satelital de Nieve (OSN)](https://observatorionieves.cl/). This project aims to monitor snow cover in Chile using satellite imagery. The project is developed by the Research team in Universidad de Playa Ancha, Valparaiso, Chile.
 
-### NOTES:
+## Installation
 
-- Reference GEE scripts: users/observatorionieves/modules (Access provided by Ana)
-- Personal Cloud Project for testing: ee-chompitest
-- Service Account for testing: Not created
+Install using Docker.
 
-### TODO:
+## Usage
 
-- [x] Identify and get access to the GCP Cloud Project.
-- [x] Create service account for testing
-- [ ] Grant erick and service account access to assets
+Configure to run in a docker container at regular intervals
+
+## Contributing
+
+TODO
+
+## License
+
+This code is licensed under the terms of the Proprietary license.
+
+## Credits
+
+This project was developed by the Research team in Universidad de Playa Ancha, Valparaiso, Chile.
